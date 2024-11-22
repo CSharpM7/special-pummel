@@ -1,0 +1,7 @@
+**/target
+**/*.pyc
+Cargo.lock
+**/blender
+**/release
+**/romf
+!src/marth_fireball/romf/
