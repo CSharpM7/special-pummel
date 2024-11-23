@@ -8,17 +8,20 @@ pub const FIGHTER_INSTANCE_CATCH_ATTACK_COUNT : i32 = 0x100000ED;
 pub const FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT: i32 = 0x2100000B;
 pub const FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP: i32 = 0x1000007;
 
-pub const PUMMEL_PENALTY_COUNT_MIN: i32 = 0; //0 removes penalty (b). 99 makes it always max penalty (a)
+pub const PUMMEL_PENALTY_COUNT_MIN: i32 = 0; //0 removes penalty (b). 999 makes it always max penalty (a)
 pub const PUMMEL_JAB_PENALTY_COUNT_MIN: i32 = 0; 
 pub const PUMMEL_MAX_PENALTY_FACTOR: f32 = 0.75;
 
-        
+pub const DAMAGE_PENALTY_MIN: f32 = 50.0; //0 removes penalty (b). 999 makes it always max penalty (a)
+pub const DAMAGE_MAX_PENALTY_FACTOR: f32 = 0.75;
+
+
 pub unsafe extern "C" fn lerp_pummel_power(fighter: &mut L2CFighterCommon,a: f32, b: f32) -> f32 {
     let pummels = WorkModule::get_int(fighter.module_accessor, FIGHTER_INSTANCE_CATCH_ATTACK_COUNT);
     let penalty_count = if StatusModule::status_kind(fighter.module_accessor) == *FIGHTER_STATUS_KIND_CATCH_ATTACK 
     {PUMMEL_PENALTY_COUNT_MIN} else {PUMMEL_JAB_PENALTY_COUNT_MIN};
 
-    if penalty_count >= 99 {
+    if penalty_count >= 999 {
         return a;
     }
     else if penalty_count == 0 {
@@ -29,6 +32,21 @@ pub unsafe extern "C" fn lerp_pummel_power(fighter: &mut L2CFighterCommon,a: f32
         return lerp(a,b,t);
     }
 }
+pub unsafe extern "C" fn lerp_clatter_by_damage(damage: f32) -> f32 {
+    let a = DAMAGE_MAX_PENALTY_FACTOR;
+    let b = 1.0;
+    if DAMAGE_PENALTY_MIN >= 999.0 {
+        return a;
+    }
+    else if DAMAGE_PENALTY_MIN == 0.0 {
+        return b;
+    }
+    else {
+        let t = (damage / DAMAGE_PENALTY_MIN).min(1.0);
+        return lerp(a,b,t);
+    }
+}
+
 // AGENT
 pub unsafe extern "C" fn change_status_callback(fighter: &mut L2CFighterCommon) -> L2CValue {
     let status_kind = StatusModule::status_kind(fighter.module_accessor);
@@ -58,6 +76,34 @@ pub unsafe extern "C" fn agent_start(fighter: &mut L2CFighterCommon)
 }
 
 // STATUS HELPERS
+pub unsafe fn catch_cut_opponent(opponent: *mut BattleObjectModuleAccessor) {
+    let situation = StatusModule::situation_kind(opponent);
+    let sit_air = situation == *SITUATION_KIND_AIR;
+    let flag_jump = WorkModule::is_flag(opponent, *FIGHTER_STATUS_CAPTURE_PULLED_WORK_FLAG_JUMP);
+    let transition = WorkModule::is_enable_transition_term(opponent, *FIGHTER_STATUS_TRANSITION_TERM_ID_CAPTURE_CUT);
+    let touch = GroundModule::is_touch(opponent, *GROUND_TOUCH_FLAG_DOWN as u32);
+    
+    let pos = *PostureModule::pos(opponent);
+    let ground_pos_stage = &mut Vector2f::zero();
+    let is_touch_stage =  GroundModule::ray_check(opponent, &Vector2f{ x: pos.x, y: pos.y}, &Vector2f{ x: 0.0, y: -5.0},false) == 1;
+    let new_status = if (
+        !flag_jump
+        && !sit_air
+        && transition
+    )||(
+        is_touch_stage
+    )
+    {*FIGHTER_STATUS_KIND_CAPTURE_CUT} else {*FIGHTER_STATUS_KIND_CAPTURE_JUMP};
+    println!("A: {sit_air} F: {flag_jump} T: {transition} G: {is_touch_stage}");
+    StatusModule::change_status_request(opponent, new_status, false);
+}
+pub unsafe fn fix_position_opponent(opponent: *mut BattleObjectModuleAccessor) {
+    if CaptureModule::is_capture(opponent) {
+        CaptureModule::update_node_pos(opponent);
+        CaptureModule::capture_to_catch_node_pos_diff(opponent);
+    }
+}
+
 pub unsafe fn catch_attack_check_special_input(fighter: &mut L2CFighterCommon) -> bool {
     let special_input = ControlModule::check_button_on(fighter.module_accessor, *CONTROL_PAD_BUTTON_SPECIAL)
     || ControlModule::check_button_on(fighter.module_accessor, *CONTROL_PAD_BUTTON_SPECIAL_RAW);
@@ -168,42 +214,39 @@ pub unsafe extern "C" fn catch_special_main(fighter: &mut L2CFighterCommon) {
     WorkModule::on_flag(fighter.module_accessor, FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL); 
     WorkModule::on_flag(fighter.module_accessor, FIGHTER_INSTANCE_WORK_ID_FLAG_FORBID_CATCH_SPECIAL); 
 
-    let opponent_id = LinkModule::get_node_object_id(fighter.module_accessor, *LINK_NO_CAPTURE) as u32;
-    if opponent_id != OBJECT_ID_NULL {
-        let opponent = get_grabbed_opponent_boma(fighter.module_accessor);
-        let opponent_damage = DamageModule::damage(opponent, 0);
-        let mut clatter = ControlModule::get_clatter_time(opponent, 0);
-        let clatter_factor = lerp_pummel_power(fighter,PUMMEL_MAX_PENALTY_FACTOR,1.0);
-        let cancel_frame = FighterMotionModuleImpl::get_cancel_frame(fighter.module_accessor,Hash40::new("catch_special"),true);
-        let bonus_t = (opponent_damage/75.0).min(1.0);
-        let clatter_bonus = lerp(0.0,cancel_frame,bonus_t);
-        println!("New clatter: {clatter}*{clatter_factor} + {clatter_bonus}.");
-        ControlModule::set_clatter_time(opponent, (clatter*clatter_factor)+clatter_bonus,0);
-    }
+    let opponent = get_grabbed_opponent_boma(fighter.module_accessor);
+    let opponent_damage = DamageModule::damage(opponent, 0);
+    let clatter = ControlModule::get_clatter_time(opponent, 0);
+    /*
+    let clatter_factor = lerp_pummel_power(fighter,PUMMEL_MAX_PENALTY_FACTOR,1.0);
+    let cancel_frame = FighterMotionModuleImpl::get_cancel_frame(fighter.module_accessor,Hash40::new("catch_special"),true);
+    let bonus_t = (opponent_damage/75.0).min(1.0);
+    let clatter_bonus = lerp(0.0,cancel_frame,bonus_t);
+    println!("New clatter: {clatter}*{clatter_factor} + {clatter_bonus}."); */
+    let clatter_factor = lerp_clatter_by_damage(opponent_damage);
+    let clatter_new = clatter*clatter_factor;
+    println!("New clatter: {clatter}*{clatter_factor}: {clatter_new}");
+    ControlModule::set_clatter_time(opponent, clatter_new,0);
 }
 
 pub unsafe extern "C" fn catch_special_main_loop(fighter: &mut L2CFighterCommon) -> L2CValue {
-    let opponent_id = LinkModule::get_node_object_id(fighter.module_accessor, *LINK_NO_CAPTURE) as u32;
-    if opponent_id != OBJECT_ID_NULL {
-        let opponent = get_grabbed_opponent_boma(fighter.module_accessor);
-        WorkModule::off_flag(opponent,*FIGHTER_STATUS_CAPTURE_PULLED_WORK_FLAG_JUMP);
+    let opponent = get_grabbed_opponent_boma(fighter.module_accessor);
+    WorkModule::off_flag(opponent,*FIGHTER_STATUS_CAPTURE_PULLED_WORK_FLAG_JUMP);
 
-        let mut clatter = ControlModule::get_clatter_time(opponent, 0);
-        let disable_clatter = WorkModule::is_flag(fighter.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
-        //println!("Clatter: {clatter} ({disable_clatter})");
-        if disable_clatter {
-            //clatter = WorkModule::get_float(fighter.module_accessor,FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP);
-            if clatter <= 1.0 {
-                ControlModule::set_clatter_time(opponent, 1.0,0);
-            }
-            //ControlModule::set_clatter_time(opponent, clatter,0);
+    let mut clatter = ControlModule::get_clatter_time(opponent, 0);
+    let disable_clatter = WorkModule::is_flag(fighter.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
+    println!("Clatter: {clatter} ({disable_clatter})");
+    if disable_clatter {
+        //clatter = WorkModule::get_float(fighter.module_accessor,FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP);
+        if clatter <= 1.0 {
+            ControlModule::set_clatter_time(opponent, 1.0,0);
         }
-        else {
-            WorkModule::set_float(fighter.module_accessor, clatter, FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP);
-            if clatter <= 1.0 {
-                ControlModule::end_clatter(opponent, 0);
-                //println!("Reset");
-            }
+        //ControlModule::set_clatter_time(opponent, clatter,0);
+    }
+    else {
+        WorkModule::set_float(fighter.module_accessor, clatter, FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP);
+        if clatter <= 1.0 {
+            //ControlModule::end_clatter(opponent, 0);
         }
     }
     return fighter.status_CatchAttack_Main();
@@ -211,7 +254,7 @@ pub unsafe extern "C" fn catch_special_main_loop(fighter: &mut L2CFighterCommon)
 
 
 #[skyline::hook(replace = smash::lua2cpp::L2CFighterCommon_attack_mtrans_post_process)]
-unsafe extern "C" fn attack_mtrans_pre_process(fighter: &mut L2CFighterCommon) {
+unsafe extern "C" fn attack_mtrans_post_process(fighter: &mut L2CFighterCommon) {
     let original = original!()(fighter);
     if fighter.global_table[PREV_STATUS_KIND].get_i32() == *FIGHTER_STATUS_KIND_CATCH_ATTACK {
         let attack_combo_max = WorkModule::get_param_int(fighter.module_accessor, hash40("attack_combo_max"), 0);
@@ -285,7 +328,7 @@ fn nro_hook(info: &skyline::nro::NroInfo) {
             skyline::install_hooks!(
                 status_CatchAttack,
                     
-                attack_mtrans_pre_process, //HDR
+                attack_mtrans_post_process,
                 attack_main,
                 attack_100_main,
             );

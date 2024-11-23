@@ -40,6 +40,8 @@ mod tantan;
 pub mod common;
 pub mod vars;
 
+mod training;
+
 #[no_mangle]
 pub fn smashline_install() {
     install();
@@ -52,6 +54,10 @@ pub fn smashline_uninstall() {
 pub fn install() {
     println!("Loading spummels");
     common::install();
+    
+    #[cfg(feature = "devhook")]
+    training::install();
+    
     #[cfg(feature = "devhook")]
     return;
 

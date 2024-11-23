@@ -145,7 +145,7 @@ unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
     if macros::is_excute(agent) {
         WorkModule::on_flag(agent.module_accessor, FIGHTER_PIKMIN_STATUS_CATCH_FLAG_START_THROW);
     }
-    frame(agent.lua_state_agent, 27.0); 
+    frame(agent.lua_state_agent, 23.0); 
     if macros::is_excute(agent) {
         WorkModule::on_flag(agent.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
     }
@@ -172,7 +172,7 @@ unsafe extern "C" fn effect_catchspecial(agent: &mut L2CAgentBase) {
 }
 
 unsafe extern "C" fn sound_catchspecial(agent: &mut L2CAgentBase) {
-    frame(agent.lua_state_agent, 22.0);
+    frame(agent.lua_state_agent, 23.0);
     if macros::is_excute(agent) {
         macros::PLAY_SE(agent, Hash40::new("vc_pikmin_001"));
     }
@@ -442,12 +442,13 @@ pub unsafe extern "C" fn catch_attack_init_variables(fighter: &mut L2CFighterCom
         if capture_id != OBJECT_ID_NULL {
             let capture_boma = sv_battle_object::module_accessor(capture_id as u32);
             let target_pos = *PostureModule::pos(capture_boma);
-            println!("Has target {capture_id} at {}",target_pos.x);
 
             let mut clatter = ControlModule::get_clatter_time(capture_boma, 0);
             ControlModule::set_clatter_time(capture_boma, clatter*0.5,0);
+            println!("Has target {capture_id} at {}. Clatter: {clatter}*0.5",target_pos.x);
             
             WorkModule::set_int(fighter.module_accessor, capture_id as i32, FIGHTER_PIKMIN_INSTANCE_WORK_INT_CHARGE_TARGET_ID);
+            WorkModule::set_int64(fighter.module_accessor, capture_id as i64, *FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT);
             if StatusModule::status_kind(fighter.module_accessor) == *FIGHTER_STATUS_KIND_THROW {
                 WorkModule::set_int(fighter.module_accessor, capture_id as i32, *FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT);
             }
@@ -467,6 +468,7 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
             return fighter.status_CatchAttack();
         }
         catch_attack_init_variables(fighter);
+        catch_special_main(fighter);
 
 
         //Tell pikmin to throw
@@ -507,6 +509,7 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
 }
 
 pub unsafe extern "C" fn catch_attack_loop_uniq(fighter: &mut L2CFighterCommon) -> L2CValue {
+    /*
     let capture_id = WorkModule::get_int(fighter.module_accessor, FIGHTER_PIKMIN_INSTANCE_WORK_INT_CHARGE_TARGET_ID) as u32;
     let disable_clatter = WorkModule::is_flag(fighter.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
     if capture_id != OBJECT_ID_NULL {
@@ -524,8 +527,9 @@ pub unsafe extern "C" fn catch_attack_loop_uniq(fighter: &mut L2CFighterCommon) 
         else {
             WorkModule::set_float(fighter.module_accessor, clatter, FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP);
         }
+    } */
+    catch_special_main_loop(fighter);
 
-    }
     if WorkModule::is_flag(fighter.module_accessor, FIGHTER_PIKMIN_STATUS_CATCH_FLAG_START_THROW) {
         WorkModule::off_flag(fighter.module_accessor, FIGHTER_PIKMIN_STATUS_CATCH_FLAG_START_THROW);
         
@@ -863,14 +867,18 @@ pub unsafe extern "C" fn pikmin_throw_f_sp_loop(weapon: &mut L2CWeaponCommon) ->
         let capture_id = WorkModule::get_int(weapon.module_accessor, *WEAPON_PIKMIN_PIKMIN_INSTANCE_WORK_ID_INT_CATCH_TARGET_BATTLE_OBJECT_ID) as u32;
         if capture_id != OBJECT_ID_NULL {
             let capture_boma = sv_battle_object::module_accessor(capture_id as u32);
+
             let mut clatter = ControlModule::get_clatter_time(capture_boma, 0);
             //println!("Throw Clatter: {clatter}");
             if clatter <= 0.0 && !WorkModule::is_flag(weapon.module_accessor, WEAPON_PIKMIN_PIKMIN_STATUS_THROW_WORK_FLAG_DISABLE_CLATTER) {
                 let new_status = if !sub {WEAPON_PIKMIN_PIKMIN_STATUS_KIND_CATCH_CUT} else {WEAPON_PIKMIN_PIKMIN_STATUS_KIND_CATCH_CUT_SUB};
                 weapon.change_status(new_status.into(),false.into());
-                StatusModule::change_status_request(capture_boma, *FIGHTER_STATUS_KIND_CAPTURE_JUMP, false);
+                catch_cut_opponent(capture_boma);
                 let owner = get_owner_boma(weapon);
                 WorkModule::on_flag(owner, *FIGHTER_PIKMIN_INSTANCE_WORK_ID_FLAG_CATCH_CUT);
+            }
+            else {
+                fix_position_opponent(capture_boma);
             }
         }
     }
