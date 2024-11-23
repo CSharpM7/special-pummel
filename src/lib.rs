@@ -24,6 +24,7 @@ use smash::{
 use smashline::*;
 
 mod imports;
+mod duckhunt;
 mod edge;
 mod gaogaen;
 mod gekkouga;
@@ -54,13 +55,14 @@ pub fn smashline_uninstall() {
 pub fn install() {
     println!("Loading spummels");
     common::install();
-    
+
     #[cfg(feature = "devhook")]
     training::install();
     
     #[cfg(feature = "devhook")]
     return;
 
+    duckhunt::install();
     edge::install();
     gaogaen::install();
     gekkouga::install();

@@ -242,7 +242,7 @@ pub unsafe extern "C" fn catch_special_main_loop(fighter: &mut L2CFighterCommon)
 
     let mut clatter = ControlModule::get_clatter_time(opponent, 0);
     let disable_clatter = WorkModule::is_flag(fighter.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
-    println!("Clatter: {clatter} ({disable_clatter})");
+    //println!("Clatter: {clatter} ({disable_clatter})");
     if disable_clatter {
         //clatter = WorkModule::get_float(fighter.module_accessor,FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP);
         if clatter <= 1.0 {
