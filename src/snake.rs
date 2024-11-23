@@ -20,12 +20,13 @@ unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
     {
         ArticleModule::generate_article(agent.module_accessor, *FIGHTER_SNAKE_GENERATE_ARTICLE_C4, false, -1);
     }
-    frame(agent.lua_state_agent, 14.0);
-    FT_MOTION_RATE_RANGE(agent, 14.0, 24.0, 15.0);
+    frame(agent.lua_state_agent, 11.0);
+    FT_MOTION_RATE_RANGE(agent, 11.0, 24.0, 5.0);
     frame(agent.lua_state_agent, 24.0);
     FT_MOTION_RATE(agent,1.0);
     frame(agent.lua_state_agent, 38.0);
     if macros::is_excute(agent) {
+        WorkModule::on_flag(agent.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
         if is_constraint_article(fighter, *FIGHTER_SNAKE_GENERATE_ARTICLE_C4, ArticleOperationTarget(*ARTICLE_OPE_TARGET_ALL)) {
             ArticleModule::change_status(agent.module_accessor, *FIGHTER_SNAKE_GENERATE_ARTICLE_C4, *WEAPON_SNAKE_C4_STATUS_KIND_ESTABLISH_TARGET, ArticleOperationTarget(*ARTICLE_OPE_TARGET_ALL));
         }
@@ -36,9 +37,12 @@ unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
             ArticleModule::shoot(agent.module_accessor, *FIGHTER_SNAKE_GENERATE_ARTICLE_C4, ArticleOperationTarget(*ARTICLE_OPE_TARGET_ALL), false);
         }
     }
-    frame(agent.lua_state_agent, 40.0);
+    frame(agent.lua_state_agent, 40.0); 
     FT_MOTION_RATE_RANGE(agent, 40.0, 55.0, 20.0);
-    frame(agent.lua_state_agent, 55.0);
+    if macros::is_excute(agent) {
+        WorkModule::off_flag(agent.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
+    }
+    frame(agent.lua_state_agent, 55.0); 
     FT_MOTION_RATE(agent,1.0);
 }
 
@@ -140,6 +144,11 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
     if has_c4 && WorkModule::is_flag(fighter.module_accessor,FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL) {
         fighter.status_CatchAttack_common(L2CValue::Hash40(Hash40::new("catch_special2")));
         return fighter.sub_shift_status_main(L2CValue::Ptr(L2CFighterCommon_bind_address_call_status_CatchAttack_Main as *const () as _));
+    }
+    else if WorkModule::is_flag(fighter.module_accessor,FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL) {
+        let capture_boma = get_grabbed_opponent_boma(fighter.module_accessor);
+        let mut clatter = ControlModule::get_clatter_time(capture_boma, 0);
+        ControlModule::set_clatter_time(capture_boma, clatter*0.5,0);
     }
     
     return to_return;

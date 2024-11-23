@@ -229,6 +229,13 @@ pub unsafe extern "C" fn catch_special_main(fighter: &mut L2CFighterCommon) {
     ControlModule::set_clatter_time(opponent, clatter_new,0);
 }
 
+pub unsafe extern "C" fn throw_special_main_loop(fighter: &mut L2CFighterCommon) -> L2CValue {
+    let capture_id = WorkModule::get_int64(fighter.module_accessor, *FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT) as u32;
+    if capture_id != OBJECT_ID_NULL {
+        return catch_special_main_loop(fighter);
+    }
+    return fighter.status_CatchAttack_Main();
+}
 pub unsafe extern "C" fn catch_special_main_loop(fighter: &mut L2CFighterCommon) -> L2CValue {
     let opponent = get_grabbed_opponent_boma(fighter.module_accessor);
     WorkModule::off_flag(opponent,*FIGHTER_STATUS_CAPTURE_PULLED_WORK_FLAG_JUMP);

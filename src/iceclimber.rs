@@ -12,7 +12,7 @@ unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
     let kbg = 60;
     let bkb = 35;
     let mut target = OBJECT_ID_NULL as u64;
-    let clatter_factor = 0.75;
+    let clatter_factor = 1.0;
     if macros::is_excute(agent) {
         macros::ATTACK_ABS(agent, *FIGHTER_ATTACK_ABSOLUTE_KIND_THROW, 0, damage, angle, kbg, 0, bkb, 0.0, 1.0, *ATTACK_LR_CHECK_F, 0.0, true, Hash40::new("collision_attr_normal"), *ATTACK_SOUND_LEVEL_S, *COLLISION_SOUND_ATTR_NONE, *ATTACK_REGION_THROW);
         macros::ATTACK_ABS(agent, *FIGHTER_ATTACK_ABSOLUTE_KIND_CATCH, 0, 3.0, 361, 100, 0, 40, 0.0, 1.0, *ATTACK_LR_CHECK_F, 0.0, true, Hash40::new("collision_attr_ice"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_PUNCH, *ATTACK_REGION_THROW);
@@ -35,6 +35,7 @@ unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
         lua_bind::FighterCutInManager::set_throw_finish_zoom_rate(singletons::FighterCutInManager(), 1.5);
         lua_bind::FighterCutInManager::set_throw_finish_offset(singletons::FighterCutInManager(), Vector3f{x: 0.0, y: 0.0, z: 0.0});
         WorkModule::on_flag(agent.module_accessor, FIGHTER_POPO_STATUS_THROW_FLAG_DISABLE_CLATTER);
+        WorkModule::on_flag(agent.module_accessor, FIGHTER_STATUS_CATCH_ATTACK_FLAG_DISABLE_CUT);
     }
     wait(agent.lua_state_agent, 1.0);
     if macros::is_excute(agent) {      
@@ -51,6 +52,7 @@ unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
     wait(agent.lua_state_agent, 1.0);
     if macros::is_excute(agent) {
         AttackModule::clear_all(agent.module_accessor);
+        WorkModule::set_int64(agent.module_accessor, OBJECT_ID_NULL as i64,*FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT);
         
         let opponent_id = target as u32;
         if opponent_id != OBJECT_ID_NULL {
@@ -306,25 +308,24 @@ pub unsafe extern "C" fn throw_main_uniq(fighter: &mut L2CFighterCommon) -> L2CV
 }
 
 unsafe extern "C" fn throw_sp_main_loop(fighter: &mut L2CFighterCommon) -> L2CValue {
-    if !WorkModule::is_flag(fighter.module_accessor, FIGHTER_POPO_STATUS_THROW_FLAG_DISABLE_CLATTER) {
-        let opponent_id = WorkModule::get_int64(fighter.module_accessor, *FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT) as u32;
-        if opponent_id != OBJECT_ID_NULL {
-            let opponent = sv_battle_object::module_accessor(opponent_id as u32);
-            let rate = WorkModule::get_float(fighter.module_accessor,*FIGHTER_STATUS_THROW_WORK_FLOAT_MOTION_RATE);
-            MotionModule::set_rate(opponent, rate);
-            let mut clatter = ControlModule::get_clatter_time(opponent, 0);
-            println!("Throw Clatter: {clatter}");
-            if clatter <= 0.0 {
-                AttackModule::clear_all(fighter.module_accessor);
-                fighter.change_status(FIGHTER_STATUS_KIND_CATCH_CUT.into(),false.into());
-                StatusModule::change_status_request(opponent, *FIGHTER_STATUS_KIND_CAPTURE_JUMP, false);
-                if is_nana_alive(fighter) {
-                    let partner_id = LinkModule::get_node_object_id(fighter.module_accessor, *FIGHTER_POPO_LINK_NO_PARTNER) as u32;
-                    let partner_boma = sv_battle_object::module_accessor(partner_id);
-                    if StatusModule::status_kind(partner_boma) == *FIGHTER_STATUS_KIND_THROW {
-                        SoundModule::stop_se_all(partner_boma, 0,false,false);
-                        StatusModule::change_status_request(partner_boma, *FIGHTER_STATUS_KIND_CATCH_CUT, false);
-                    }
+    let opponent_id =  WorkModule::get_int64(fighter.module_accessor, *FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT)as u32;
+    if opponent_id != OBJECT_ID_NULL {
+        throw_special_main_loop(fighter);
+        let opponent = sv_battle_object::module_accessor(opponent_id as u32);
+        let rate = WorkModule::get_float(fighter.module_accessor,*FIGHTER_STATUS_THROW_WORK_FLOAT_MOTION_RATE);
+        MotionModule::set_rate(opponent, rate);
+        let mut clatter = ControlModule::get_clatter_time(opponent, 0);
+        //println!("Throw Clatter: {clatter}");
+        if clatter <= 0.0 {
+            AttackModule::clear_all(fighter.module_accessor);
+            fighter.change_status(FIGHTER_STATUS_KIND_CATCH_CUT.into(),false.into());
+            StatusModule::change_status_request(opponent, *FIGHTER_STATUS_KIND_CAPTURE_JUMP, false);
+            if is_nana_alive(fighter) {
+                let partner_id = LinkModule::get_node_object_id(fighter.module_accessor, *FIGHTER_POPO_LINK_NO_PARTNER) as u32;
+                let partner_boma = sv_battle_object::module_accessor(partner_id);
+                if StatusModule::status_kind(partner_boma) == *FIGHTER_STATUS_KIND_THROW {
+                    SoundModule::stop_se_all(partner_boma, 0,false,false);
+                    StatusModule::change_status_request(partner_boma, *FIGHTER_STATUS_KIND_CATCH_CUT, false);
                 }
             }
         }

@@ -224,6 +224,7 @@ unsafe extern "C" fn pikmin_game_catchspecial(agent: &mut L2CAgentBase) {
         if !is_sub {
             let owner = get_owner_boma(agent);
             WorkModule::on_flag(owner, FIGHTER_PIKMIN_STATUS_CATCH_FLAG_CHARGE);
+            WorkModule::set_int64(owner, OBJECT_ID_NULL as i64,*FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT);
         }
     }
 }
@@ -528,7 +529,7 @@ pub unsafe extern "C" fn catch_attack_loop_uniq(fighter: &mut L2CFighterCommon) 
             WorkModule::set_float(fighter.module_accessor, clatter, FIGHTER_STATUS_CATCH_ATTACK_WORK_FLOAT_CLATTER_OPP);
         }
     } */
-    catch_special_main_loop(fighter);
+    throw_special_main_loop(fighter);
 
     if WorkModule::is_flag(fighter.module_accessor, FIGHTER_PIKMIN_STATUS_CATCH_FLAG_START_THROW) {
         WorkModule::off_flag(fighter.module_accessor, FIGHTER_PIKMIN_STATUS_CATCH_FLAG_START_THROW);
