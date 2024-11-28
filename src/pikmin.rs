@@ -450,7 +450,7 @@ pub unsafe extern "C" fn catch_attack_init_variables(fighter: &mut L2CFighterCom
             
             WorkModule::set_int(fighter.module_accessor, capture_id as i32, FIGHTER_PIKMIN_INSTANCE_WORK_INT_CHARGE_TARGET_ID);
             WorkModule::set_int64(fighter.module_accessor, capture_id as i64, *FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT);
-            if StatusModule::status_kind(fighter.module_accessor) == *FIGHTER_STATUS_KIND_THROW {
+            if fighter.global_table[STATUS_KIND].get_i32() == *FIGHTER_STATUS_KIND_THROW {
                 WorkModule::set_int(fighter.module_accessor, capture_id as i32, *FIGHTER_STATUS_THROW_WORK_INT_TARGET_OBJECT);
             }
             
@@ -916,7 +916,7 @@ pub unsafe extern "C" fn olimar_frame(fighter: &mut L2CFighterCommon)  {
     }
 }
 pub unsafe extern "C" fn pikmin_frame(weapon: &mut L2CWeaponCommon)  {
-    let status = StatusModule::status_kind(weapon.module_accessor);
+    let status = weapon.global_table[STATUS_KIND].get_i32();
     let listen_to_charge =
     (*WEAPON_PIKMIN_PIKMIN_STATUS_KIND_WAIT..*WEAPON_PIKMIN_PIKMIN_STATUS_KIND_TURN_WAIT).contains(&status)
     || (*WEAPON_PIKMIN_PIKMIN_STATUS_KIND_GROUND_FOLLOW..*WEAPON_PIKMIN_PIKMIN_STATUS_KIND_JUMP_AERIAL).contains(&status)
@@ -955,7 +955,7 @@ pub unsafe extern "C" fn debug(weapon: &mut L2CWeaponCommon)  {
     let variation_as_str = pikmin_variantion_to_string(variation);
     if variation == 0 {
         if MotionModule::frame(weapon.module_accessor) < 1.0 {
-            let status = StatusModule::status_kind(weapon.module_accessor);
+            let status = weapon.global_table[STATUS_KIND].get_i32();
             println!("{variation_as_str} status: {status}");
         }
     }

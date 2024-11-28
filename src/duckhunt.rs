@@ -11,17 +11,62 @@ pub const TARGET_STEP_RETURN: i32 = 3;
 pub const TARGET_STEP_SHOOT_MAX_FRAME: i32 = 2;
 
 unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
+    frame(agent.lua_state_agent, 22.0);
     if macros::is_excute(agent) {
     }
+    ArticleModule::change_status(agent.module_accessor, *FIGHTER_DUCKHUNT_GENERATE_ARTICLE_RETICLE, WEAPON_DUCKHUNT_RETICLE_STATUS_KIND_TARGET, ArticleOperationTarget(*ARTICLE_OPE_TARGET_ALL));
 }
 
 unsafe extern "C" fn effect_catchspecial(agent: &mut L2CAgentBase) {
+    frame(agent.lua_state_agent, 2.0);
+    if macros::is_excute(agent) {
+        let color = WorkModule::get_int64(agent.module_accessor, *FIGHTER_INSTANCE_WORK_ID_INT_COLOR) as i32;
+        EFFECT_FOLLOW_arg11(agent,Hash40::new("duckhunt_feather"), Hash40::new("duckneck"), -4, 0, 0, 0, 0, -90, 1, true, color);
+    }
+    frame(agent.lua_state_agent, 7.0);
+    if macros::is_excute(agent) {
+        macros::EFFECT_OFF_KIND(agent, Hash40::new("duckhunt_feather"), false, true);
+    }
+    frame(agent.lua_state_agent, 20.0);
+    if macros::is_excute(agent) {
+        let color = WorkModule::get_int64(agent.module_accessor, *FIGHTER_INSTANCE_WORK_ID_INT_COLOR) as i32;
+        EFFECT_FOLLOW_arg11(agent,Hash40::new("duckhunt_feather"), Hash40::new("duckneck"), -4, 0, 0, 0, 0, -90, 1, true, color);
+    }
+    frame(agent.lua_state_agent, 44.0);
+    if macros::is_excute(agent) {
+        macros::EFFECT_OFF_KIND(agent, Hash40::new("duckhunt_feather"), false, true);
+    }
 }
 
 unsafe extern "C" fn sound_catchspecial(agent: &mut L2CAgentBase) {
+    if macros::is_excute(agent) {
+        macros::PLAY_SE(agent, Hash40::new("se_duckhunt_appeal_h01"));
+    }
+    frame(agent.lua_state_agent, 20.0);
+    if macros::is_excute(agent) {
+        macros::PLAY_SE(agent, Hash40::new("se_duckhunt_appeal_h04"));
+        //macros::PLAY_SE(agent, Hash40::new("vc_duckhunt_duck_attack02"));
+        macros::PLAY_STATUS(agent, Hash40::new("se_duckhunt_appeal_s04"));
+    }
+    frame(agent.lua_state_agent, 45.0);
+    if macros::is_excute(agent) {
+        //macros::PLAY_SE(agent, Hash40::new("se_duckhunt_appeal_h05"));
+        sound!(agent, *MA_MSC_CMD_SOUND_STOP_SE_STATUS);
+    }
 }
 
 unsafe extern "C" fn expression_catchspecial(agent: &mut L2CAgentBase) {
+    if macros::is_excute(agent) {
+        VisibilityModule::set_int64(agent.module_accessor, hash40("body") as i64, hash40("body_openwing") as i64);
+    }
+    frame(agent.lua_state_agent, 20.0);
+    if macros::is_excute(agent) {
+        ControlModule::set_rumble(agent.module_accessor, Hash40::new("rbkind_nohits"), 6, false, *BATTLE_OBJECT_ID_INVALID as u32);
+    }
+    frame(agent.lua_state_agent, 53.0);
+    if macros::is_excute(agent) {
+        VisibilityModule::set_int64(agent.module_accessor, hash40("body") as i64, hash40("body_normal") as i64);
+    }
 }
 
 pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2CValue {
@@ -35,7 +80,6 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
     
     let to_return = catch_attack_main_inner(fighter);
     if WorkModule::is_flag(fighter.module_accessor,FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL) {
-        ArticleModule::change_status(fighter.module_accessor, *FIGHTER_DUCKHUNT_GENERATE_ARTICLE_RETICLE, WEAPON_DUCKHUNT_RETICLE_STATUS_KIND_TARGET, ArticleOperationTarget(*ARTICLE_OPE_TARGET_ALL));
     }
 
     return to_return;
@@ -58,11 +102,6 @@ unsafe extern "C" fn reticle_sound_catchspecial(agent: &mut L2CAgentBase) {
     }
 }
 
-pub unsafe extern "C" fn reticle_init(weapon: &mut L2CWeaponCommon) -> L2CValue {
-    println!("Summoned");
-
-    0.into()
-}
 pub unsafe extern "C" fn reticle_target_pre(weapon: &mut L2CFighterCommon) -> L2CValue {
     smashline::original_status(Pre, weapon, *WEAPON_DUCKHUNT_RETICLE_STATUS_KIND_MOVE)(weapon)
 }
@@ -81,7 +120,7 @@ pub unsafe extern "C" fn reticle_target_main(weapon: &mut L2CFighterCommon) -> L
 
     let target = get_grabbed_opponent_boma(owner);
     let target_id = (*target).battle_object_id;
-    println!("Target: {target_id}");
+    //println!("Target: {target_id}");
     WorkModule::set_int64(weapon.module_accessor, target_id as i64, WEAPON_DUCKHUNT_RETICLE_INSTANCE_WORK_ID_INT_TARGET);
     
     reticle_target_end(weapon);
@@ -111,7 +150,6 @@ pub unsafe extern "C" fn reticle_target_main(weapon: &mut L2CFighterCommon) -> L
     let color_r = team_color_as_vector.value[0];
     let color_g = team_color_as_vector.value[1];
     let color_b = team_color_as_vector.value[2];
-    //println!("Color: {team_color} ({color_r},{color_g},{color_b})");
     EffectModule::set_rgb(weapon.module_accessor, test, color_r,color_g,color_b);
 
     SoundModule::play_se(weapon.module_accessor, Hash40::new("se_duckhunt_special_l02"), true, false, false, false, enSEType(0));
@@ -137,7 +175,6 @@ pub unsafe extern "C" fn reticle_target_loop(weapon: &mut L2CFighterCommon) -> L
             AttackModule::clear_all(weapon.module_accessor);
         }
         if WorkModule::count_down_int(weapon.module_accessor, *WEAPON_INSTANCE_WORK_ID_INT_LIFE, 0) {
-            println!("Sleep");
             EffectModule::kill_kind(weapon.module_accessor, Hash40::new("duckhunt_target"), false, false);
             MotionModule::change_motion(weapon.module_accessor, Hash40::new("dummy"), 0.0, 1.0, false, 0.0, false, false);
             weapon.change_status(WEAPON_DUCKHUNT_RETICLE_STATUS_KIND_MOVE.into(), false.into());

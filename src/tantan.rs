@@ -30,7 +30,6 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
             waist = WorkModule::get_param_int(captured_boma, hash40("param_motion"), hash40("waist_size"));
         }
 
-        let is_large = MotionModule::motion_kind(fighter.module_accessor) == hash40("catch_special_big"); 
         let motion = if waist == *FIGHTER_WAIST_SIZE_L {Hash40::new("catch_special_big")} else {Hash40::new("catch_special")};
         fighter.status_CatchAttack_common(L2CValue::Hash40(motion));
         return fighter.sub_shift_status_main(L2CValue::Ptr(catch_special_main_loop as *const () as _));
