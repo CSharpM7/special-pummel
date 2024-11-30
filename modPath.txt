@@ -1,1 +1,1 @@
-sd:/ultimate/mods/MemeMovesets2/plugin.nro
+sd:/ultimate/mods/SpecialPummel/plugin.nro

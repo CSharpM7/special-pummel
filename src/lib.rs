@@ -30,6 +30,7 @@ mod gaogaen;
 mod gekkouga;
 mod iceclimber;
 mod koopa;
+mod koopajr;
 mod metaknight;
 mod packun;
 mod pfushigisou;
@@ -68,6 +69,7 @@ pub fn install() {
     gekkouga::install();
     iceclimber::install();
     koopa::install();
+    koopajr::install();
     metaknight::install();
     packun::install();
     pfushigisou::install();
