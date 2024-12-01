@@ -48,6 +48,24 @@ unsafe extern "C" fn expression_catchspecial(agent: &mut L2CAgentBase) {
 /*
 STATUS
 */
+pub unsafe extern "C" fn catch_wait_uniq(fighter: &mut L2CFighterCommon) -> L2CValue {
+    let captured_boma = &mut *get_grabbed_opponent_boma(fighter.module_accessor);
+    let mut waist = *FIGHTER_WAIST_SIZE_M;
+    if utility::get_category(captured_boma) == *BATTLE_OBJECT_CATEGORY_FIGHTER {
+        waist = WorkModule::get_param_int(captured_boma, hash40("param_motion"), hash40("waist_size"));
+    }
+
+    let motion = match waist {
+        0x2 => Hash40::new("catch_wait_l"),
+        0x1 => Hash40::new("catch_wait_m"),
+        _ => Hash40::new("catch_wait"),
+    };
+
+    let original = fighter.status_CatchWait_common(L2CValue::Hash40(motion)); 
+    MotionModule::change_motion(fighter.module_accessor, motion, 0.0, 1.0, false, 0.0, false, false);
+
+    return original;
+}
 pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2CValue {
     if catch_attack_check_special_input(fighter) {
         if catch_attack_check_special_anim(fighter) {
@@ -57,6 +75,20 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
 
             let mut clatter = ControlModule::get_clatter_time(captured_boma, 0);
             ControlModule::set_clatter_time(captured_boma, clatter*0.75,0);
+
+            /*
+            //Set final...
+            LinkModule::send_event_nodes(fighter.module_accessor, *WEAPON_PTRAINER_PTRAINER_LINK_NO_POKEMON, Hash40::new_raw(0x97824a0a0), 0);
+            */
+            let trainer_id = LinkModule::get_parent_id(fighter.module_accessor, *FIGHTER_POKEMON_LINK_NO_PTRAINER, true) as u32;
+            if trainer_id != OBJECT_ID_NULL {
+                let trainer = sv_battle_object::module_accessor(trainer_id as u32);
+                StatusModule::change_status_request(trainer, *WEAPON_PTRAINER_PTRAINER_STATUS_KIND_REACTION, false);
+                let lr = PostureModule::lr(fighter.module_accessor);
+                let motion = if lr < 0.0 {Hash40::new("special_r")} else {Hash40::new("special_l")};
+                //special_f
+                MotionModule::change_motion(trainer, motion, 0.0, 1.0, false, 0.0, false, false);
+            }
 
             let mut waist = *FIGHTER_WAIST_SIZE_M;
             if utility::get_category(captured_boma) == *BATTLE_OBJECT_CATEGORY_FIGHTER {
@@ -69,10 +101,28 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
                 _ => Hash40::new("catch_special"),
             };
             fighter.status_CatchAttack_common(L2CValue::Hash40(motion));
+            MotionModule::change_motion(fighter.module_accessor, motion, 0.0, 1.0, false, 0.0, false, false);
             return fighter.sub_shift_status_main(L2CValue::Ptr(catch_special_main_loop as *const () as _));
         }
     }
     return smashline::original_status(Main, fighter, *FIGHTER_STATUS_KIND_CATCH_ATTACK)(fighter);
+}
+
+pub unsafe extern "C" fn debug(boma: *mut BattleObjectModuleAccessor) {
+    if MotionModule::frame(boma) < 1.0 {
+        let status = StatusModule::status_kind(boma);
+        println!("status: {status}");
+    }
+}
+pub unsafe extern "C" fn ivy_frame(fighter: &mut L2CFighterCommon)  {
+    let trainer_id = LinkModule::get_parent_id(fighter.module_accessor, *FIGHTER_POKEMON_LINK_NO_PTRAINER, true) as u32;
+    if trainer_id != OBJECT_ID_NULL {
+        let trainer = sv_battle_object::module_accessor(trainer_id as u32);
+        debug(trainer);
+    }
+}
+pub unsafe extern "C" fn trainer_frame(weapon: &mut L2CWeaponCommon)  {
+    debug(weapon.module_accessor);
 }
 
 pub fn install() {
@@ -93,5 +143,6 @@ pub fn install() {
         .acmd("expression_catchspeciall", expression_catchspecial,Priority::Default)
 
         .status(Main, *FIGHTER_STATUS_KIND_CATCH_ATTACK, catch_attack_uniq)
+        .status(Main, *FIGHTER_STATUS_KIND_CATCH_WAIT, catch_wait_uniq)
     .install();
 }
