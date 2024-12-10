@@ -30,7 +30,6 @@ pub mod imports_acmd {
                 self
             },
             ext::*,
-            getvar::*
         },
 
         crate::vars::*,
@@ -72,7 +71,6 @@ pub mod imports_agent {
                 self
             },
             ext::*,
-            getvar::*
         },
 
         crate::vars::*,

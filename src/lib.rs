@@ -42,6 +42,7 @@ mod tantan;
 pub mod common;
 pub mod vars;
 
+#[cfg(feature = "devhook")]
 mod training;
 
 #[no_mangle]
