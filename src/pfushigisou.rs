@@ -108,23 +108,6 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
     return smashline::original_status(Main, fighter, *FIGHTER_STATUS_KIND_CATCH_ATTACK)(fighter);
 }
 
-pub unsafe extern "C" fn debug(boma: *mut BattleObjectModuleAccessor) {
-    if MotionModule::frame(boma) < 1.0 {
-        let status = StatusModule::status_kind(boma);
-        println!("status: {status}");
-    }
-}
-pub unsafe extern "C" fn ivy_frame(fighter: &mut L2CFighterCommon)  {
-    let trainer_id = LinkModule::get_parent_id(fighter.module_accessor, *FIGHTER_POKEMON_LINK_NO_PTRAINER, true) as u32;
-    if trainer_id != OBJECT_ID_NULL {
-        let trainer = sv_battle_object::module_accessor(trainer_id as u32);
-        debug(trainer);
-    }
-}
-pub unsafe extern "C" fn trainer_frame(weapon: &mut L2CWeaponCommon)  {
-    debug(weapon.module_accessor);
-}
-
 pub fn install() {
     smashline::Agent::new("pfushigisou")
         .acmd("game_catchspecial", game_catchspecial,Priority::Default)

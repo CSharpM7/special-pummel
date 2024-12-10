@@ -91,7 +91,9 @@ pub unsafe fn add_revenge(fighter: &mut L2CFighterCommon) {
     WorkModule::set_int(fighter.module_accessor, max_time as i32, *FIGHTER_GAOGAEN_INSTANCE_WORK_ID_INT_REVENGE_TIMER);
     WorkModule::set_float(fighter.module_accessor,new_rate,*FIGHTER_GAOGAEN_INSTANCE_WORK_ID_FLOAT_REVENGE_RATE);
 
+    #[cfg(feature = "devhook")]
     println!("Revenge: {rate} > {new_rate}");
+    
     MotionAnimcmdModule::call_script_single(fighter.module_accessor, *FIGHTER_ANIMCMD_EFFECT, Hash40::new("effect_speciallwrevenge"), -1);
 }
 

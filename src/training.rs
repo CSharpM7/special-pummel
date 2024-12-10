@@ -200,21 +200,8 @@ pub unsafe fn hook_start_clatter(
 unsafe extern "C" fn appeal_main(fighter: &mut L2CFighterCommon) -> L2CValue {
     let original = fighter.status_Appeal();
     if !is_training_mode() || is_operation_cpu(&mut *fighter.module_accessor) { return original; }
-    /* 
-    ControlModule::reset_trigger(fighter.module_accessor);
-    if ControlModule::get_command_flag_cat(fighter.module_accessor, 1) == *FIGHTER_PAD_CMD_CAT2_FLAG_APPEAL_HI {
-        MotionModule::change_motion(fighter.module_accessor, Hash40::new("appeal_hi_r"), 0.0, 1.0, false, 0.0, false, false);
-    }
-    else if ControlModule::get_command_flag_cat(fighter.module_accessor, 1) == *FIGHTER_PAD_CMD_CAT2_FLAG_APPEAL_S_L
-    || ControlModule::get_command_flag_cat(fighter.module_accessor, 1) == *FIGHTER_PAD_CMD_CAT2_FLAG_APPEAL_S_R {
-        MotionModule::change_motion(fighter.module_accessor, Hash40::new("appeal_s_r"), 0.0, 1.0, false, 0.0, false, false);
-    }
-    else {
-        MotionModule::change_motion(fighter.module_accessor, Hash40::new("appeal_lw_r"), 0.0, 1.0, false, 0.0, false, false);
-    }*/
 
     CLATTER_SETTING = CLATTER_SETTING.shifted();
-    //println!("New clatter: {}",CLATTER_SETTING.into_u32());
 
     let lr = PostureModule::lr(fighter.module_accessor);
     let flash_y_offset = WorkModule::get_param_float(fighter.module_accessor, hash40("height"), 0);
@@ -228,7 +215,9 @@ unsafe extern "C" fn appeal_main(fighter: &mut L2CFighterCommon) -> L2CValue {
 
 unsafe extern "C" fn training_frame(fighter: &mut L2CFighterCommon) {
     let boma = (&mut *fighter.module_accessor);
-    if is_operation_cpu(boma) {
+    let status = StatusModule::status_kind(boma);
+    if is_operation_cpu(boma) &&
+    ![*FIGHTER_STATUS_KIND_SHOULDERED_DONKEY_START,*FIGHTER_STATUS_KIND_SHOULDERED_DONKEY,*FIGHTER_STATUS_KIND_SHOULDERED_DONKEY_THROWN].contains(&status){
         handle_clatter(boma);
     }
 }

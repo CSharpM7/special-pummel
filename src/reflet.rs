@@ -109,7 +109,6 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
         let magic = WorkModule::get_int(fighter.module_accessor, *FIGHTER_REFLET_INSTANCE_WORK_ID_INT_SPECIAL_LW_CURRENT_POINT);
         let can_suck = magic > 0;
         WorkModule::set_flag(fighter.module_accessor, !can_suck, *FIGHTER_REFLET_INSTANCE_WORK_ID_FLAG_SPECIAL_FAILURE);
-        println!("Can suck: {can_suck}");
         if can_suck {
             let robin_module = fighter.global_table[MODULE_ACCESSOR].get_ptr() as *mut FighterModuleAccessor;
             WorkModule::dec_int(fighter.module_accessor, *FIGHTER_REFLET_INSTANCE_WORK_ID_INT_SPECIAL_LW_CURRENT_POINT);
@@ -121,6 +120,7 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
             let rehit_param = format!("special_lw_serial_hit_frame_{}",entry_count);
             let rehit_rate = WorkModule::get_param_int(fighter.module_accessor, hash40("param_special_lw"), hash40(rehit_param.as_str()));
             WorkModule::set_int(fighter.module_accessor, rehit_rate, FIGHTER_REFLET_STATUS_CATCH_WORK_INT_REHIT);
+            #[cfg(feature = "dev")]
             println!("REHIT: {rehit_rate} Param: {rehit_param}");
 
             WorkModule::off_flag(fighter.module_accessor, FIGHTER_REFLET_STATUS_CATCH_FLAG_HEAL);
@@ -180,6 +180,7 @@ pub unsafe extern "C" fn catch_attack_exec(fighter: &mut L2CFighterCommon) -> L2
                 let difference = (current_damage-capture_damage).max(0.0);
                 let different_add = (difference * damage_mul).min(heal_max);
                 heal = (damage * heal_base) + different_add;
+                #[cfg(feature = "dev")]
                 println!("{heal} = ({damage} * {heal_base}) + ({difference} * {damage_mul})>{different_add}");
                 DamageModule::heal(fighter.module_accessor, -heal, 0);
             }

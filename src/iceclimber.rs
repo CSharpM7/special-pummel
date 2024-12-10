@@ -142,9 +142,7 @@ unsafe extern "C" fn expression_catchspecial(agent: &mut L2CAgentBase) {
 }
 
 unsafe extern "C" fn game_catchspecial_nana(agent: &mut L2CAgentBase) {
-    println!("Yo?");
     if macros::is_excute(agent) {
-        println!("Yo?");
     }
 }
 

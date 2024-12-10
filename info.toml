@@ -1,0 +1,8 @@
+display_name="Special Pummel"
+description="""
+Press Special during grab to perform a special pummel. Some characters have unique mechanics, most use either a special or jab.
+Requires Smashline 2, NRO Hook, and Skyline
+"""
+version="1.0"
+category="Param"
+authors="C#"

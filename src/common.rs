@@ -116,7 +116,7 @@ pub unsafe fn catch_attack_check_special_input(fighter: &mut L2CFighterCommon) -
 
 pub unsafe fn catch_attack_check_special_anim_boma(module_accessor: *mut BattleObjectModuleAccessor) -> bool {
     let has_anim = MotionModule::is_anim_resource(module_accessor, Hash40::new("catch_special"));
-    println!("Special pummel has anim: {has_anim}");
+    //println!("Special pummel has anim: {has_anim}");
     return has_anim;
 }
 
@@ -192,7 +192,7 @@ unsafe extern "C" fn catchcont(fighter: &mut L2CFighterCommon) -> L2CValue {
             if distance_with_scale <= 0.0
             || capture_pos_x_diff <= distance_with_scale {
                 WorkModule::set_flag(fighter.module_accessor, special && can_special, FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL);
-                println!("Is special: {special} ({can_special})");
+                //println!("Is special: {special} ({can_special})");
                 fighter.change_status(FIGHTER_STATUS_KIND_CATCH_ATTACK.into(), true.into());
                 return true.into();
             }
@@ -240,13 +240,14 @@ pub unsafe extern "C" fn catch_attack_main_inner(fighter: &mut L2CFighterCommon)
             else if [*FIGHTER_KIND_GAMEWATCH,*FIGHTER_KIND_ROBOT,*FIGHTER_KIND_JACK]
             .contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_SPECIAL_S;}
 
-            //else if [*FIGHTER_KIND_REFLET,*FIGHTER_KIND_DEMON]
-            //.contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_SPECIAL_LW;}
+            else if [*FIGHTER_KIND_POPO,*FIGHTER_KIND_NANA]
+            .contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_SPECIAL_LW;}
             
+            else if [*FIGHTER_KIND_SAMUS,*FIGHTER_KIND_SAMUSD].contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_ATTACK_S3;}
             else if [*FIGHTER_KIND_PIKACHU,*FIGHTER_KIND_PICHU].contains(&fighter_kind) {next_status = FIGHTER_PIKACHU_STATUS_KIND_SPECIAL_S_ATTACK;}
             else if [*FIGHTER_KIND_POPO,*FIGHTER_KIND_NANA,].contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_ATTACK_LW3;}
             else if *FIGHTER_KIND_GANON == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_S3;}
-            else if *FIGHTER_KIND_PIKMIN == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_S3;}
+            else if *FIGHTER_KIND_PIKMIN == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
             else if [*FIGHTER_KIND_MURABITO,*FIGHTER_KIND_SHIZUE].contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_ATTACK_S3;}
             else if *FIGHTER_KIND_ROCKMAN == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
             else if *FIGHTER_KIND_WIIFIT == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
@@ -299,7 +300,10 @@ pub unsafe extern "C" fn catch_special_main(fighter: &mut L2CFighterCommon) {
     println!("New clatter: {clatter}*{clatter_factor} + {clatter_bonus}."); */
     let clatter_factor = lerp_clatter_by_damage(opponent_damage);
     let clatter_new = clatter*clatter_factor;
+    
+    #[cfg(feature = "devhook")]
     println!("New clatter: {clatter}*{clatter_factor}: {clatter_new}");
+
     ControlModule::set_clatter_time(opponent, clatter_new,0);
 }
 
