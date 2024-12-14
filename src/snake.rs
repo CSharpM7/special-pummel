@@ -148,7 +148,7 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
     else if WorkModule::is_flag(fighter.module_accessor,FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL) {
         let capture_boma = get_grabbed_opponent_boma(fighter.module_accessor);
         let mut clatter = ControlModule::get_clatter_time(capture_boma, 0);
-        ControlModule::set_clatter_time(capture_boma, clatter*0.5,0);
+        ControlModule::set_clatter_time(capture_boma, clatter*0.375,0);
     }
     
     return to_return;

@@ -60,6 +60,15 @@ unsafe extern "C" fn expression_catchspecial(agent: &mut L2CAgentBase) {
     }
 }
 
+pub unsafe extern "C" fn catch_attack_end(fighter: &mut L2CFighterCommon) -> L2CValue {
+    if WorkModule::is_flag(fighter.module_accessor,FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL) {
+        let eff = WorkModule::get_int(fighter.module_accessor,*FIGHTER_PACKUN_INSTANCE_WORK_ID_INT_SPECIAL_S_CHARGE_MAX_EFFECT_HANDLE) as u32;
+        EffectModule::remove(fighter.module_accessor, eff, 0);
+        WorkModule::set_int(fighter.module_accessor, 0, *FIGHTER_PACKUN_INSTANCE_WORK_ID_INT_SPECIAL_S_COUNT);
+    }
+    0.into()
+}
+
 pub unsafe extern "C" fn poison_shoot_init(weapon: &mut L2CWeaponCommon) -> L2CValue {
     let owner = get_owner_boma(weapon);
     let owner_status = StatusModule::status_kind(owner);
@@ -74,6 +83,7 @@ pub fn install() {
         .acmd("effect_catchspecial", effect_catchspecial,Priority::Default)
         .acmd("sound_catchspecial", sound_catchspecial,Priority::Default)
         .acmd("expression_catchspecial", expression_catchspecial,Priority::Default)
+        .status(End, *FIGHTER_STATUS_KIND_CATCH_ATTACK, catch_attack_end)
     .install();
     smashline::Agent::new("packun_poisonbreath")
         .status(Init, *WEAPON_PACKUN_POISONBREATH_STATUS_KIND_SHOOT, poison_shoot_init)

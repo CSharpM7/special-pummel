@@ -118,7 +118,7 @@ impl ClatterFrequency {
     }
 }
 
-static mut CLATTER_SETTING: ClatterFrequency = ClatterFrequency::NORMAL;
+static mut CLATTER_SETTING: ClatterFrequency = ClatterFrequency::NONE;
 
 unsafe fn do_clatter_input(module_accessor: &mut BattleObjectModuleAccessor) {
     let clatter_step = read(&CLATTER_STEP);
@@ -198,9 +198,10 @@ pub unsafe fn hook_start_clatter(
 }
 
 unsafe extern "C" fn appeal_main(fighter: &mut L2CFighterCommon) -> L2CValue {
-    let original = fighter.status_Appeal();
+    let original = 0.into();//fighter.status_Appeal();
     if !is_training_mode() || is_operation_cpu(&mut *fighter.module_accessor) { return original; }
-
+    if !ControlModule::check_button_on(fighter.module_accessor, *CONTROL_PAD_BUTTON_APPEAL_S_R) { return original; }
+    
     CLATTER_SETTING = CLATTER_SETTING.shifted();
 
     let lr = PostureModule::lr(fighter.module_accessor);
@@ -209,7 +210,7 @@ unsafe extern "C" fn appeal_main(fighter: &mut L2CFighterCommon) -> L2CValue {
     let flash_handle = EffectModule::req_follow(fighter.module_accessor, Hash40::new("sys_flash"), Hash40::new("top"), &Vector3f::new(-5.0, flash_y_offset, 2.0), &Vector3f::zero(), 1.0, false, 0, 0, 0, 0, 0, false, false) as u32;
     let clatter_color = CLATTER_SETTING.color();
     EffectModule::set_rgb(fighter.module_accessor, flash_handle, clatter_color.x,clatter_color.y,clatter_color.z);	
-
+    
     original
 }
 
@@ -227,7 +228,7 @@ pub fn install() {
     skyline::install_hooks!(hook_start_clatter);
 
     let common = &mut Agent::new("fighter");
-    common.status(Main, *FIGHTER_STATUS_KIND_APPEAL, appeal_main);
+    common.status(Init, *FIGHTER_STATUS_KIND_APPEAL, appeal_main);
     common.on_line(Main, training_frame);
     common.install();
 

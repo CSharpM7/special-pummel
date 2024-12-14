@@ -3,6 +3,8 @@ use crate::imports::imports_acmd::*;
 
 pub const FIGHTER_METAKNIGHT_INSTANCE_WORK_ID_INT_SPECIAL_PUMMEL_ID: i32 = 0x100000BF;
 pub const FIGHTER_METAKNIGHT_STATUS_THROW_FLAG_START: i32 = 0x2100000E;
+pub const FIGHTER_METAKNIGHT_STATUS_THROW_FLAG_F: i32 = 0x2100000F;
+pub const FIGHTER_METAKNIGHT_STATUS_THROW_WORK_INT_STATE: i32 = 0x11000004;
 
 unsafe extern "C" fn game_catchspecial(agent: &mut L2CAgentBase) {
     if macros::is_excute(agent) {
@@ -143,6 +145,7 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
 }
 
 pub unsafe extern "C" fn throw_main_uniq(fighter: &mut L2CFighterCommon) -> L2CValue {
+    WorkModule::set_int(fighter.module_accessor, 0, FIGHTER_METAKNIGHT_STATUS_THROW_WORK_INT_STATE);
     if StatusModule::prev_status_kind(fighter.module_accessor, 0) == *FIGHTER_STATUS_KIND_CATCH_ATTACK 
     && WorkModule::is_flag(fighter.module_accessor, FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL) {
         WorkModule::set_int64(fighter.module_accessor, hash40("throw_lw") as i64, *FIGHTER_STATUS_CATCH_WAIT_WORK_INT_MOTION_KIND);
@@ -162,7 +165,8 @@ pub unsafe extern "C" fn throw_main_uniq(fighter: &mut L2CFighterCommon) -> L2CV
 }
 
 pub unsafe extern "C" fn throw_sp_main_loop_uniq(fighter: &mut L2CFighterCommon) -> L2CValue {
-    if MotionModule::motion_kind(fighter.module_accessor) == Hash40::new("catch_special").hash {
+    let state = WorkModule::get_int(fighter.module_accessor,FIGHTER_METAKNIGHT_STATUS_THROW_WORK_INT_STATE);
+    if state == 0 {
         CameraModule::set_enable_camera(fighter.module_accessor,false,0);
         let status_frame = fighter.global_table[STATUS_FRAME].get_i32();
         if MotionModule::is_end(fighter.module_accessor) ||
@@ -172,7 +176,8 @@ pub unsafe extern "C" fn throw_sp_main_loop_uniq(fighter: &mut L2CFighterCommon)
             let lr = PostureModule::lr(fighter.module_accessor);
             let throw_F = lr == ControlModule::get_stick_x(fighter.module_accessor).signum()
             || ControlModule::get_stick_x(fighter.module_accessor).abs() < 0.2;
-            //let motion = if throw_F {Hash40::new("special_lw_f")} else {Hash40::new("special_lw_b")};
+            WorkModule::set_flag(fighter.module_accessor, throw_F, FIGHTER_METAKNIGHT_STATUS_THROW_FLAG_F);
+            
             let motion = if throw_F {Hash40::new("catch_special_f")} else {Hash40::new("catch_special_b")};
             
             let capture_id = WorkModule::get_int64(fighter.module_accessor,FIGHTER_METAKNIGHT_INSTANCE_WORK_ID_INT_SPECIAL_PUMMEL_ID) as u64;
@@ -185,8 +190,9 @@ pub unsafe extern "C" fn throw_sp_main_loop_uniq(fighter: &mut L2CFighterCommon)
                 );
             }
             MotionModule::change_motion(fighter.module_accessor, motion, 0.0, 1.0, false, 0.0, false, false);
-            
             VisibilityModule::set_whole(fighter.module_accessor, true);
+
+            WorkModule::inc_int(fighter.module_accessor, FIGHTER_METAKNIGHT_STATUS_THROW_WORK_INT_STATE);
         }
         return 0.into();
     }
@@ -196,6 +202,9 @@ pub unsafe extern "C" fn throw_sp_main_loop_uniq(fighter: &mut L2CFighterCommon)
             CameraModule::set_enable_camera(fighter.module_accessor,true,0);
         }
         if MotionModule::is_end(fighter.module_accessor) {
+            let throw_F = WorkModule::is_flag(fighter.module_accessor, FIGHTER_METAKNIGHT_STATUS_THROW_FLAG_F);
+            let motion = if throw_F {Hash40::new("special_s_attack_f")} else {Hash40::new("special_s_attack_b")};
+            MotionModule::change_motion(fighter.module_accessor, motion, 0.0, 100.0, false, 0.0, false, false);
             fighter.change_status(FIGHTER_GEKKOUGA_STATUS_KIND_SPECIAL_S_END.into(), false.into());
         }
         //fighter.status_Throw_Main()
@@ -207,6 +216,7 @@ pub unsafe extern "C" fn throw_sp_main_loop_uniq(fighter: &mut L2CFighterCommon)
             }
         }
         /*
+        Not needed
         if CancelModule::is_enable_cancel(fighter.module_accessor) {
             if fighter.sub_wait_ground_check_common(false.into()).get_bool()
             || fighter.sub_air_check_fall_common().get_bool() {
@@ -214,6 +224,9 @@ pub unsafe extern "C" fn throw_sp_main_loop_uniq(fighter: &mut L2CFighterCommon)
             }
         }
         if MotionModule::is_end(fighter.module_accessor) {
+            if fighter.is_grounded() {
+                MotionModule::change_motion(fighter.module_accessor, Hash40::new("wait_2"), 0.0, 1.0, false, 0.0, false, false);
+            }
             fighter.change_status_by_situation(FIGHTER_STATUS_KIND_WAIT.into(), FIGHTER_STATUS_KIND_FALL.into(), false.into());
             return 1.into();
         } 
