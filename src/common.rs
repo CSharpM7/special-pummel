@@ -133,13 +133,13 @@ pub unsafe fn cont_check_throw(fighter: &mut L2CFighterCommon, transition_term: 
     if WorkModule::is_enable_transition_term(fighter.module_accessor, transition_term) 
     && (cat2 & pad_flag != 0 || throw_stick) {
         WorkModule::set_int(fighter.module_accessor, transition_term, *FIGHTER_STATUS_CATCH_WAIT_WORK_INT_LAST_STRANS);
-        let status_kind = match pad_flag {
+        let throw_status_kind = match pad_flag {
             0x100000 => THROW_F_STATUS_KIND,
             0x200000 => THROW_B_STATUS_KIND,
             0x400000 => THROW_HI_STATUS_KIND,
             _ => THROW_LW_STATUS_KIND
         };
-        let status_from_table = fighter.global_table[THROW_LW_STATUS_KIND].get_i32();
+        let status_from_table = fighter.global_table[throw_status_kind].get_i32();
         fighter.change_status(status_from_table.into(), true.into());
         return true;
     }
@@ -434,7 +434,6 @@ pub fn install() {
 
     let common = &mut Agent::new("fighter");
     common.on_start(agent_start);
-    //common.status(Main, *FIGHTER_STATUS_KIND_ATTACK, attack_main_dev);
     
     common.install();
 }

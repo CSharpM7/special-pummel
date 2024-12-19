@@ -956,7 +956,7 @@ pub fn install() {
         .status(Init, *FIGHTER_STATUS_KIND_THROW, throw_init)
         .status(Exit, *FIGHTER_STATUS_KIND_THROW, throw_exit)
         .status(Main, *FIGHTER_STATUS_KIND_THROW, throw_main)
-        .on_line(Main, olimar_frame)
+        //.on_line(Main, olimar_frame)
     .install();
     let agent_pikmin = &mut smashline::Agent::new("pikmin_pikmin");
     agent_pikmin
