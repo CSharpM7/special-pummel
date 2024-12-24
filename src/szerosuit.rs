@@ -21,10 +21,17 @@ pub unsafe extern "C" fn attack_lw4_main(fighter: &mut L2CFighterCommon) -> L2CV
 	let ret = fighter.status_AttackLw4();
 	if StatusModule::prev_status_kind(fighter.module_accessor, 0) == *FIGHTER_STATUS_KIND_CATCH_ATTACK {
         MotionModule::set_frame(fighter.module_accessor,15.0,false);
-		AttackModule::set_reaction_mul(fighter.module_accessor, 0.5);
+		//AttackModule::set_reaction_mul(fighter.module_accessor, 0.5);
+		AttackModule::set_power_mul_status(fighter.module_accessor, 0.25);
 	}
 	ret
 }
+pub unsafe extern "C" fn attack_lw4_exit(fighter: &mut L2CFighterCommon) -> L2CValue {
+	let ret = fighter.sub_attack_s4_uniq_process_exit();
+	AttackModule::set_reaction_mul(fighter.module_accessor, 1.0);
+	ret
+}
+
 pub unsafe extern "C" fn special_n_exec(fighter: &mut L2CFighterCommon) -> L2CValue {
 	if StatusModule::prev_status_kind(fighter.module_accessor, 0) == *FIGHTER_STATUS_KIND_CATCH_ATTACK {
         MotionModule::set_rate(fighter.module_accessor,2.0);
@@ -45,6 +52,8 @@ pub fn install() {
     smashline::Agent::new("szerosuit")
         .status(Main, *FIGHTER_STATUS_KIND_CATCH_ATTACK, catch_attack_uniq)
         .status(Main, *FIGHTER_STATUS_KIND_ATTACK_LW4, attack_lw4_main)
+        //.status(Exit, *FIGHTER_STATUS_KIND_ATTACK_LW4, attack_lw4_exit)
+
         .status(Exec, *FIGHTER_STATUS_KIND_SPECIAL_N, special_n_exec)
         .status(Exec, *FIGHTER_SZEROSUIT_STATUS_KIND_SPECIAL_N_SHOOT_H, special_n_h_exec)
     .install();

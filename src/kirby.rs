@@ -27,6 +27,10 @@ pub unsafe extern "C" fn special_n_init(fighter: &mut L2CFighterCommon) -> L2CVa
 		if capture_id != OBJECT_ID_NULL as u64 {
 			let capture_boma = sv_battle_object::module_accessor(capture_id as u32);
 			StatusModule::change_status_force(capture_boma, *FIGHTER_STATUS_KIND_SLIP,true);
+			KineticModule::clear_speed_all(capture_boma);
+			let lr = PostureModule::lr(fighter.module_accessor);
+			let wind = Vector3f{ x: lr*-1.0,y: 0.0, z: 0.0};
+			KineticModule::add_speed_outside(capture_boma, *KINETIC_OUTSIDE_ENERGY_TYPE_WIND_NO_ADDITION, &wind);
 			WorkModule::set_int(capture_boma, 1,*FIGHTER_INSTANCE_WORK_ID_INT_INVALID_CAPTURE_FRAME);
 			WorkModule::set_int64(fighter.module_accessor, OBJECT_ID_NULL as i64, FIGHTER_KIRBY_INSTANCE_WORK_ID_INT_SPECIAL_PUMMEL_ID);
 		}
