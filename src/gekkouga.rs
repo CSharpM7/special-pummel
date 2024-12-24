@@ -88,7 +88,7 @@ unsafe extern "C" fn game_catchspecialf(agent: &mut L2CAgentBase) {
             HitModule::set_status_all(capture_boma,HitStatus(*HIT_STATUS_NORMAL),0);
             MotionModule::set_rate(capture_boma, 1.0);
         }
-        macros::ATTACK(agent, 0, 0, Hash40::new("top"), 10.0, 36, 83, 0, 60, 7.0, 0.0, 10.0, 14.5, Some(0.0), Some(8.0), Some(14.5), 1.3, 1.0, *ATTACK_SETOFF_KIND_ON, *ATTACK_LR_CHECK_POS, false, 0, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_GA, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_normal"), *ATTACK_SOUND_LEVEL_L, *COLLISION_SOUND_ATTR_KICK, *ATTACK_REGION_KICK);
+        macros::ATTACK(agent, 0, 0, Hash40::new("top"), 10.0, 33, 100, 0, 40, 7.0, 0.0, 10.0, 14.5, Some(0.0), Some(8.0), Some(14.5), 1.3, 1.0, *ATTACK_SETOFF_KIND_ON, *ATTACK_LR_CHECK_POS, false, 0, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_GA, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_normal"), *ATTACK_SOUND_LEVEL_L, *COLLISION_SOUND_ATTR_KICK, *ATTACK_REGION_KICK);
     }
     frame(agent.lua_state_agent, 7.0);
     if macros::is_excute(agent) {
@@ -116,7 +116,7 @@ unsafe extern "C" fn game_catchspecialb(agent: &mut L2CAgentBase) {
             HitModule::set_status_all(capture_boma,HitStatus(*HIT_STATUS_NORMAL),0);
             MotionModule::set_rate(capture_boma, 1.0);
         }
-        macros::ATTACK(agent, 0, 0, Hash40::new("top"), 10.0, 36, 83, 0, 60, 7.0, 0.0, 8.0, -13.0, Some(0.0), Some(8.5), Some(-12.0), 1.3, 1.0, *ATTACK_SETOFF_KIND_ON, *ATTACK_LR_CHECK_POS, false, 0, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_GA, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_normal"), *ATTACK_SOUND_LEVEL_L, *COLLISION_SOUND_ATTR_KICK, *ATTACK_REGION_KICK);
+        macros::ATTACK(agent, 0, 0, Hash40::new("top"), 10.0, 80, 100, 0, 40, 7.0, 0.0, 8.0, -13.0, Some(0.0), Some(8.5), Some(-12.0), 1.3, 1.0, *ATTACK_SETOFF_KIND_ON, *ATTACK_LR_CHECK_POS, false, 0, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_GA, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_normal"), *ATTACK_SOUND_LEVEL_L, *COLLISION_SOUND_ATTR_KICK, *ATTACK_REGION_KICK);
     }
     frame(agent.lua_state_agent, 7.0);
     if macros::is_excute(agent) {

@@ -76,10 +76,6 @@ pub unsafe extern "C" fn catch_attack_uniq(fighter: &mut L2CFighterCommon) -> L2
             let mut clatter = ControlModule::get_clatter_time(captured_boma, 0);
             ControlModule::set_clatter_time(captured_boma, clatter*0.75,0);
 
-            /*
-            //Set final...
-            LinkModule::send_event_nodes(fighter.module_accessor, *WEAPON_PTRAINER_PTRAINER_LINK_NO_POKEMON, Hash40::new_raw(0x97824a0a0), 0);
-            */
             let trainer_id = LinkModule::get_parent_id(fighter.module_accessor, *FIGHTER_POKEMON_LINK_NO_PTRAINER, true) as u32;
             if trainer_id != OBJECT_ID_NULL {
                 let trainer = sv_battle_object::module_accessor(trainer_id as u32);

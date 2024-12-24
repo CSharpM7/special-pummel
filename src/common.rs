@@ -1,6 +1,5 @@
 use crate::imports::imports_status::*;
 
-
 pub const FIGHTER_INSTANCE_WORK_ID_FLAG_CATCH_SPECIAL: i32 = 0x20000116;
 pub const FIGHTER_INSTANCE_WORK_ID_FLAG_FORBID_CATCH_SPECIAL: i32 = 0x20000117;
 pub const FIGHTER_INSTANCE_CATCH_ATTACK_COUNT : i32 = 0x100000ED;
@@ -237,21 +236,20 @@ pub unsafe extern "C" fn catch_attack_main_inner(fighter: &mut L2CFighterCommon)
             if [*FIGHTER_KIND_KIRBY,*FIGHTER_KIND_PFUSHIGISOU,*FIGHTER_KIND_WOLF]
             .contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_SPECIAL_N;}
 
-            else if [*FIGHTER_KIND_GAMEWATCH,*FIGHTER_KIND_ROBOT,*FIGHTER_KIND_JACK]
+            else if [*FIGHTER_KIND_GAMEWATCH,*FIGHTER_KIND_DEDEDE,*FIGHTER_KIND_ROBOT,*FIGHTER_KIND_JACK]
             .contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_SPECIAL_S;}
 
             else if [*FIGHTER_KIND_POPO,*FIGHTER_KIND_NANA]
             .contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_SPECIAL_LW;}
+			
+            else if [*FIGHTER_KIND_ROCKMAN,*FIGHTER_KIND_WIIFIT,*FIGHTER_KIND_ROBOT,*FIGHTER_KIND_PACMAN]
+            .contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
             
             else if [*FIGHTER_KIND_SAMUS,*FIGHTER_KIND_SAMUSD].contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_ATTACK_S3;}
             else if [*FIGHTER_KIND_PIKACHU,*FIGHTER_KIND_PICHU].contains(&fighter_kind) {next_status = FIGHTER_PIKACHU_STATUS_KIND_SPECIAL_S_ATTACK;}
             else if [*FIGHTER_KIND_POPO,*FIGHTER_KIND_NANA,].contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_ATTACK_LW3;}
             else if *FIGHTER_KIND_GANON == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_S3;}
-            else if *FIGHTER_KIND_PIKMIN == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
             else if [*FIGHTER_KIND_MURABITO,*FIGHTER_KIND_SHIZUE].contains(&fighter_kind) {next_status = FIGHTER_STATUS_KIND_ATTACK_S3;}
-            else if *FIGHTER_KIND_ROCKMAN == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
-            else if *FIGHTER_KIND_WIIFIT == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
-            else if *FIGHTER_KIND_PACMAN == fighter_kind {next_status = FIGHTER_STATUS_KIND_ATTACK_DASH;}
             else if *FIGHTER_KIND_RYU == fighter_kind {next_status = FIGHTER_RYU_STATUS_KIND_ATTACK_COMMAND1;}
             else if *FIGHTER_KIND_KEN == fighter_kind {next_status = FIGHTER_RYU_STATUS_KIND_ATTACK_COMMAND1;}
             else if *FIGHTER_KIND_CLOUD == fighter_kind {
@@ -292,12 +290,6 @@ pub unsafe extern "C" fn catch_special_main(fighter: &mut L2CFighterCommon) {
     let opponent = get_grabbed_opponent_boma(fighter.module_accessor);
     let opponent_damage = DamageModule::damage(opponent, 0);
     let clatter = ControlModule::get_clatter_time(opponent, 0);
-    /*
-    let clatter_factor = lerp_pummel_power(fighter,PUMMEL_MAX_PENALTY_FACTOR,1.0);
-    let cancel_frame = FighterMotionModuleImpl::get_cancel_frame(fighter.module_accessor,Hash40::new("catch_special"),true);
-    let bonus_t = (opponent_damage/75.0).min(1.0);
-    let clatter_bonus = lerp(0.0,cancel_frame,bonus_t);
-    println!("New clatter: {clatter}*{clatter_factor} + {clatter_bonus}."); */
     let clatter_factor = lerp_clatter_by_damage(opponent_damage);
     let clatter_new = clatter*clatter_factor;
     

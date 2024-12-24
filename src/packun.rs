@@ -66,7 +66,7 @@ pub unsafe extern "C" fn catch_attack_end(fighter: &mut L2CFighterCommon) -> L2C
         EffectModule::remove(fighter.module_accessor, eff, 0);
         WorkModule::set_int(fighter.module_accessor, 0, *FIGHTER_PACKUN_INSTANCE_WORK_ID_INT_SPECIAL_S_COUNT);
     }
-    0.into()
+    fighter.status_end_CatchAttack()
 }
 
 pub unsafe extern "C" fn poison_shoot_init(weapon: &mut L2CWeaponCommon) -> L2CValue {

@@ -32,7 +32,7 @@ pub mod imports_acmd {
             ext::*,
         },
 
-        crate::vars::*,
+        //crate::vars::*,
         crate::common::*,
     };
     pub unsafe extern "C" fn empty_acmd(agent: &mut L2CAgentBase) {
@@ -73,7 +73,7 @@ pub mod imports_agent {
             ext::*,
         },
 
-        crate::vars::*,
+        //crate::vars::*,
         crate::common::*,
     };
     pub unsafe extern "C" fn empty_status(agent: &mut L2CAgentBase) -> L2CValue {

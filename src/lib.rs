@@ -31,6 +31,7 @@ mod gekkouga;
 mod iceclimber;
 mod koopa;
 mod koopajr;
+mod kirby;
 mod metaknight;
 mod packun;
 mod pfushigisou;
@@ -38,9 +39,9 @@ mod pikmin;
 mod reflet;
 mod rosetta;
 mod snake;
+mod szerosuit;
 mod tantan;
 pub mod common;
-pub mod vars;
 
 #[cfg(feature = "devhook")]
 mod training;
@@ -71,6 +72,7 @@ pub fn install() {
     iceclimber::install();
     koopa::install();
     koopajr::install();
+	kirby::install();
     metaknight::install();
     packun::install();
     pfushigisou::install();
@@ -78,6 +80,7 @@ pub fn install() {
     reflet::install();
     rosetta::install();
     snake::install();
+    szerosuit::install();
     tantan::install();
 }
 pub fn uninstall() {
